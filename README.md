@@ -1,6 +1,9 @@
 # rpidak
 Tools to manage RPI 0 W Dakboard and integrate with homeassistant.io
 
+#dependencies
+pip install pyyaml
+
 # scripts
 Motion detected
 Presence detected
