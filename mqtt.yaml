@@ -1,0 +1,11 @@
+mqtt:
+  server: ha.cnlsft.me
+  port: 1883
+  client: rpidak
+  user: iot
+  pwd: ha_iot
+  topic: house/entry/rpidak
+  command_prefix: cmnd
+  state_prefix: stat
+  telemetry_prefix: tele
+  fulltopic: "%prefix%/%topic%"
