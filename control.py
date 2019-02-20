@@ -55,6 +55,7 @@ class Control(object):
 
     def _onpowerq(self, topic, msg):
         """ query monitor power state"""
+	print('querying display power')
         output = self._exec_command(TVSERVICE_STATUS)
         state = "ON"
         if (output == "TV is off"):
@@ -70,6 +71,7 @@ class Control(object):
         """ query monitor service state"""
 
     def _exec_command(self, data):
+	print("executing " + data.join(' '))
         process = subprocess.Popen(data, stdout=subprocess.PIPE)
         try:
             while process.poll() is None: #still running
@@ -83,10 +85,12 @@ class Control(object):
             process.stdout.close()
             process.kill()
 
+run = True
 control = Control()
 def signal_handler(sig, frame):
     print("Exiting...")
     control.stop()
+    run = False
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -94,8 +98,6 @@ signal.signal(signal.SIGINT, signal_handler)
 print( "Listening for events on " + control._mqClient._subTopic)
 print( "Press Ctrl+C to exit")
 control.listen()
+while run:
+    control._mqClient._client.loop()
 
-
-
-
-    

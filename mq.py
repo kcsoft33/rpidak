@@ -1,3 +1,4 @@
+import os, sys
 import paho.mqtt.client as mqtt
 import yaml
 
@@ -31,9 +32,10 @@ class Client(object):
 
     def listen(self):
         self._ensureClient()
-        self._client.loop_forever()
+        self._client.loop_start()
 
     def disconnect(self):
+        self._client.loop_stop()
         self._client.disconnect()
 
     def subscribe(self, suffix=""):
@@ -59,7 +61,7 @@ class Client(object):
         self._oncmnd = func
 
     def __init__(self, config=""):
-        self._config = "mqtt.yaml"
+        self._config = os.path.join(sys.path[0], "mqtt.yaml")
         if (config != ""):
             self._config=config
 
@@ -75,7 +77,7 @@ class Client(object):
         self._client = mqtt.Client(self._cfgData['client'])
         self._client.on_connect = self._on_connect
         self._client.on_message = self._on_message
-
+#	self._client.username_pw_set(username=self._cfgData['user'],password=self._cfgData['pwd'])
         self._client.connect(self._cfgData['server'], self._cfgData['port'], 60)
         return self._client
 
@@ -84,7 +86,7 @@ class Client(object):
         print("Connected with result code "+str(rc))
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
-        client.subscribe("$SYS/#")
+#        client.subscribe("$SYS/#")
 
     # The callback for when a PUBLISH message is received from the server.
     def _on_message(self, client, userdata, msg):
@@ -92,6 +94,7 @@ class Client(object):
             return
         
         prefix = self._cfgData['command_prefix']
+	print(msg.topic)
         if msg.topic.startswith(prefix):
             self.oncmnd(msg.topic, str(msg.payload.decode("utf-8")))
         else:
