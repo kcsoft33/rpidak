@@ -21,6 +21,8 @@ class Client(object):
         # generate state topic based off config
         topic = self._formatTopic("state_prefix", suffix)
         self._client.publish(topic, msg)
+        if not self._threaded:
+            self._client.loop()
 
     def publishTele(self, msg, suffix = ""):
         """ Publish the configured telemetry topic with supplied message"""
@@ -29,9 +31,12 @@ class Client(object):
         # generate state topic based off config
         topic = self._formatTopic("telemetry_prefix", suffix)
         self._client.publish(topic, msg)
+        if not self._threaded:
+            self._client.loop()
 
     def start(self):
         self._ensureClient()
+        self._threaded = True
         self._client.loop_start()
     
     def loop(self):
@@ -39,6 +44,7 @@ class Client(object):
 
     def listen(self):
         self._ensureClient()
+        self._threaded = False
         self._client.loop_forever()
 
     def disconnect(self):
@@ -84,7 +90,7 @@ class Client(object):
         self._client = mqtt.Client(self._cfgData['client'])
         self._client.on_connect = self._on_connect
         self._client.on_message = self._on_message
-#	self._client.username_pw_set(username=self._cfgData['user'],password=self._cfgData['pwd'])
+        self._client.username_pw_set(username=self._cfgData['user'],password=self._cfgData['pwd'])
         self._client.connect(self._cfgData['server'], self._cfgData['port'], 60)
         return self._client
 
@@ -118,3 +124,4 @@ class Client(object):
     def _ensureClient(self):
         if self._client is None:
             self._client = self._connect()
+            self._threaded = False
