@@ -30,9 +30,16 @@ class Client(object):
         topic = self._formatTopic("telemetry_prefix", suffix)
         self._client.publish(topic, msg)
 
-    def listen(self):
+    def start(self):
         self._ensureClient()
         self._client.loop_start()
+    
+    def loop(self):
+        self._client.loop()
+
+    def listen(self):
+        self._ensureClient()
+        self._client.loop_forever()
 
     def disconnect(self):
         self._client.loop_stop()
@@ -94,9 +101,9 @@ class Client(object):
             return
         
         prefix = self._cfgData['command_prefix']
-	print(msg.topic)
-        if msg.topic.startswith(prefix):
-            self.oncmnd(msg.topic, str(msg.payload.decode("utf-8")))
+        print(msg.topic)
+        if msg.topic.startswith(prefix) and not self._oncmnd is None:
+            self._oncmnd(msg.topic, str(msg.payload.decode("utf-8")))
         else:
             print(msg.topic+" "+str(msg.payload))
 

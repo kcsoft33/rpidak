@@ -2,6 +2,14 @@ import os, sys, json
 import subprocess, signal
 import mq
 import datetime
+
+#import ptvsd
+# Allow other computers to attach to ptvsd at this IP address and port.
+#ptvsd.enable_attach(address=('192.168.0.121', 3000), redirect_output=True)
+
+# Pause the program until a remote debugger is attached
+#ptvsd.wait_for_attach()
+
 # control.py
 # sets up a mqtt subscriber for control events defined in mqtt.yaml
 # hook up handlers for each command supported for the device
@@ -10,13 +18,26 @@ class Control(object):
     def __init__(self):
         self._mqClient = self._connectMq()
 
+    def start(self):
+        """ kicks off thread to listen for MQTT events, requires calls to loop() to pump msgs"""
+        self._active = True
+        self._mqClient.start()
+
+    def loop(self):
+        self._mqClient.loop()
+
     def listen(self):
+        self._active = True
         self._mqClient.listen()
 
     def stop(self):
         self._mqClient.publishState("Offline","STATUS")
         self._mqClient.publishTele("Offline","LWT")
         self._mqClient.disconnect()
+        self._active = False
+
+    def active(self):
+        return self._active
 
     def _connectMq(self):
         mqc = mq.Client()
@@ -47,23 +68,22 @@ class Control(object):
     def _onpower(self, topic, msg):
         """ invoke monitor power state"""
         if (msg == "ON"):
-            output = self._exec_command(TVSERVICE_ON)
+            output = self._exec_command(self.TVSERVICE_ON)
         else:
-            output = self._exec_command(TVSERVICE_OFF)
-        
+            output = self._exec_command(self.TVSERVICE_OFF)
+        print(output)
         self._onpowerq(topic, msg)
 
     def _onpowerq(self, topic, msg):
         """ query monitor power state"""
-	print('querying display power')
-        output = self._exec_command(TVSERVICE_STATUS)
+        print('querying display power')
+        output = self._exec_command(self.TVSERVICE_STATUS)
         state = "ON"
-        if (output == "TV is off"):
+        if (output.find('[TV is off]') != -1):
             state = "OFF"
         
         self._mqClient.publishState(state, "POWER")
 
-    
     def _onmotion(self, topic, msg):
         """ invoke motion state change"""
     
@@ -71,26 +91,27 @@ class Control(object):
         """ query monitor service state"""
 
     def _exec_command(self, data):
-	print("executing " + data.join(' '))
+        """ exec process """
+        print("executing " + ' '.join(data))
         process = subprocess.Popen(data, stdout=subprocess.PIPE)
         try:
-            while process.poll() is None: #still running
-                line = char = ""
-                while char != "\n":
-                    line += char
-                    char = process.stdout.read(1)
+            line = process.stdout.readline()
+            # while process.poll() is None: #still running
+                # line = char = ""
+                # while char != "\n":
+                    # line += char
+                    # char = process.stdout.read(1)
                 
-                return line
+            return line
         finally:
             process.stdout.close()
             process.kill()
 
-run = True
+
 control = Control()
 def signal_handler(sig, frame):
     print("Exiting...")
     control.stop()
-    run = False
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -98,6 +119,6 @@ signal.signal(signal.SIGINT, signal_handler)
 print( "Listening for events on " + control._mqClient._subTopic)
 print( "Press Ctrl+C to exit")
 control.listen()
-while run:
-    control._mqClient._client.loop()
+# while control.active():
+    # control.loop()
 
