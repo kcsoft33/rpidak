@@ -94,7 +94,7 @@ class Client(object):
             return
         
         prefix = self._cfgData['command_prefix']
-	print(msg.topic)
+        print(msg.topic)
         if msg.topic.startswith(prefix):
             self.oncmnd(msg.topic, str(msg.payload.decode("utf-8")))
         else:

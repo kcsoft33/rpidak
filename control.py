@@ -47,16 +47,18 @@ class Control(object):
     def _onpower(self, topic, msg):
         """ invoke monitor power state"""
         if (msg == "ON"):
-            output = self._exec_command(TVSERVICE_ON)
+            output = self._exec_command(self.TVSERVICE_ON)
         else:
-            output = self._exec_command(TVSERVICE_OFF)
+            output = self._exec_command(self.TVSERVICE_OFF)
         
         self._onpowerq(topic, msg)
 
     def _onpowerq(self, topic, msg):
         """ query monitor power state"""
-	print('querying display power')
-        output = self._exec_command(TVSERVICE_STATUS)
+        print('querying display power')
+        p = subprocess.Popen(self.TVSERVICE_STATUS, stdout=subprocess.PIPE)
+        output = p.stdout.readline()
+        #output = self._exec_command(TVSERVICE_STATUS)
         state = "ON"
         if (output == "TV is off"):
             state = "OFF"
@@ -71,7 +73,7 @@ class Control(object):
         """ query monitor service state"""
 
     def _exec_command(self, data):
-	print("executing " + data.join(' '))
+        print("executing " + data.join(' '))
         process = subprocess.Popen(data, stdout=subprocess.PIPE)
         try:
             while process.poll() is None: #still running
@@ -84,6 +86,9 @@ class Control(object):
         finally:
             process.stdout.close()
             process.kill()
+        
+        
+run = True
 
 run = True
 control = Control()
