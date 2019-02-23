@@ -69,8 +69,7 @@ class Control(object):
     def _onpower(self, topic, msg):
         """ invoke monitor power state"""
         if (msg == "ON"):
-            self._poweron()
-            # output = self._exec_command(self.TVSERVICE_ON)
+            output = self._poweron()
         else:
             output = self._exec_command(self.TVSERVICE_OFF)
         print(output)
@@ -105,14 +104,8 @@ class Control(object):
         """ exec process """
         print("executing " + ' '.join(data))
         process = subprocess.Popen(data, stdout=subprocess.PIPE)
-        #try:
         line = process.stdout.readline()
-            # process.wait()
         return line
-        #finally:
-        #    process.stdout.close()
-        #    process.kill()
-
 
 control = Control()
 def signal_handler(sig, frame):
@@ -125,6 +118,4 @@ signal.signal(signal.SIGINT, signal_handler)
 print( "Listening for events on " + control._mqClient._subTopic)
 print( "Press Ctrl+C to exit")
 control.listen()
-# while control.active():
-    # control.loop()
 
