@@ -1,4 +1,6 @@
 import mq
+import sys
+import os
 
 #motion_detected.py
 # script that gets invoked when the motion daemon detects a change in image enough to indicate motion
@@ -9,5 +11,15 @@ import mq
 #open connection to mqtt broker
 #send msg + payload
 
+data = None
+imageFileName = None
+if (len(sys.argv) > 1):
+    imageFileName = sys.argv[1]
+    with open(imageFileName, "rb") as imageFile: 
+        imageData = imageFile.read() 
+        data = bytearray(imageData) 
+
 mqPub = mq.Client()
-mqPub.publishState("motion detected","motion")
+mqPub.publishState(data,"MOTION")
+
+os.remove(imageFileName)
