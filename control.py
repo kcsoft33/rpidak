@@ -17,6 +17,7 @@ import datetime
 class Control(object):
     def __init__(self):
         self._mqClient = self._connectMq()
+        self._onpowerq()
 
     def start(self):
         """ kicks off thread to listen for MQTT events, requires calls to loop() to pump msgs"""
@@ -51,7 +52,7 @@ class Control(object):
         """ invoke monitor power state"""
         if (topic.endswith("/POWER")):
             if (msg is None or msg == ""):
-                self._onpowerq(topic, msg)
+                self._onpowerq()
             else:
                 self._onpower(topic, msg)
         elif(topic.endswith("/MOTION")):
@@ -68,13 +69,24 @@ class Control(object):
     def _onpower(self, topic, msg):
         """ invoke monitor power state"""
         if (msg == "ON"):
-            output = self._exec_command(self.TVSERVICE_ON)
+            self._poweron()
+            # output = self._exec_command(self.TVSERVICE_ON)
         else:
             output = self._exec_command(self.TVSERVICE_OFF)
         print(output)
         self._onpowerq(topic, msg)
 
-    def _onpowerq(self, topic, msg):
+    def _poweron(self):
+        out = self._exec_command(self.TVSERVICE_ON)
+        SUDO = "sudo"
+        CHVT = "chvt"
+        CHVT_SW1 = [SUDO, CHVT, "6"]
+        CHVT_SW2 = [SUDO, CHVT, "7"]
+        self._exec_command(CHVT_SW1)
+        self._exec_command(CHVT_SW2)
+        return out
+
+    def _onpowerq(self):
         """ query monitor power state"""
         print('querying display power')
         output = self._exec_command(self.TVSERVICE_STATUS)
@@ -85,7 +97,7 @@ class Control(object):
 
     def _onmotion(self, topic, msg):
         """ invoke motion state change"""
-    
+
     def _onmotionq(self, topic, msg):
         """ query monitor service state"""
 
@@ -93,12 +105,13 @@ class Control(object):
         """ exec process """
         print("executing " + ' '.join(data))
         process = subprocess.Popen(data, stdout=subprocess.PIPE)
-        try:
-            line = process.stdout.readline()
-            return line
-        finally:
-            process.stdout.close()
-            process.kill()
+        #try:
+        line = process.stdout.readline()
+            # process.wait()
+        return line
+        #finally:
+        #    process.stdout.close()
+        #    process.kill()
 
 
 control = Control()
