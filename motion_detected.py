@@ -12,7 +12,7 @@ import os
 #send msg + payload
 
 data = None
-imageFileName = None
+
 if (len(sys.argv) > 1):
     imageFileName = sys.argv[1]
     with open(imageFileName, "rb") as imageFile: 

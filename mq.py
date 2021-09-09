@@ -83,7 +83,7 @@ class Client(object):
     
     def _loadConfig(self):
         with open(self._config, "r") as stream:
-                data = yaml.load(stream)
+                data = yaml.load(stream, Loader=yaml.SafeLoader)
                 self._cfgData = data['mqtt']
     
     def _connect(self):

@@ -1,5 +1,5 @@
 mqtt:
-  server: ha.cnlsft.me
+  server: mqtt.domain.me
   port: 1883
   client: rpidak
   user: iot
