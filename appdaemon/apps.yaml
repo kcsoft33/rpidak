@@ -1,0 +1,15 @@
+kiosk_control_test:
+  module: kiosk
+  class: Kiosk
+  input: input_boolean.test_kiosk #switch
+  enabled: input_boolean.test_kiosk_enabled
+  state_topic: stat/test_kiosk/KIOSK
+  topic: cmnd/test_kiosk/KIOSK
+  off_payload: 'OFF'
+  log_level: 0
+  sequence:
+  - uri: https://ha.domain.me
+    delay: 50
+  - uri: https://dakboard.com/app/screenPredefined?p=id
+    delay: 10
+
