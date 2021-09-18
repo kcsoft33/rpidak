@@ -14,52 +14,67 @@ class Client(object):
     mqCl.oncmnd_powerquery = onpowerq
     mqCl.listen()
 """
-    def publishState(self, msg, suffix = ""):
-        """ Publish the configured state topic with supplied message"""
-        self._ensureClient()
 
-        # generate state topic based off config
-        topic = self._formatTopic("state_prefix", suffix)
+    # free form publish
+    def publish(self, topic, msg):
+        self._ensureClient()
         self._client.publish(topic, msg)
         if not self._threaded:
             self._client.loop()
+
+
+    def publishState(self, msg, suffix = ""):
+        """ Publish the configured state topic with supplied message"""
+        # generate state topic based off config
+        topic = self._formatTopic("state_prefix", suffix)
+        self.publish(topic, msg)
+
 
     def publishTele(self, msg, suffix = ""):
         """ Publish the configured telemetry topic with supplied message"""
-        self._ensureClient()
-
         # generate state topic based off config
         topic = self._formatTopic("telemetry_prefix", suffix)
-        self._client.publish(topic, msg)
-        if not self._threaded:
-            self._client.loop()
+        self.publish(topic, msg)
+
 
     def start(self):
         self._ensureClient()
         self._threaded = True
         self._client.loop_start()
-    
+
+
     def loop(self):
         self._client.loop()
 
+
     def listen(self):
-        self._ensureClient()
-        self._threaded = False
-        self._client.loop_forever()
+        self._run = True
+        while(self._run):
+            try:
+                self._ensureClient()
+                self._threaded = False
+                self._client.loop_forever()
+            except:
+                print(sys.exc_info())
+                self._client = None
 
     def disconnect(self):
+        self._run = False
         self._client.loop_stop()
         self._client.disconnect()
+
 
     def subscribe(self, suffix=""):
         self._subTopic = self._formatTopic("command_prefix", suffix)
         self._ensureClient()
         self._client.subscribe(self._subTopic + "/#")
 
+
     @property
     def oncmnd(self):
         """If implemented, called when the broker delivers a command msg."""
         return self._oncmnd
+
 
     @oncmnd.setter
     def oncmnd(self, func):
@@ -77,11 +92,11 @@ class Client(object):
         self._config = os.path.join(sys.path[0], "mqtt.yaml")
         if (config != ""):
             self._config=config
-
         self._client = None
         self._loadConfig()
     
     def _loadConfig(self):
+        print(f"Loading {self._config}")
         with open(self._config, "r") as stream:
                 data = yaml.load(stream, Loader=yaml.SafeLoader)
                 self._cfgData = data['mqtt']
@@ -96,9 +111,11 @@ class Client(object):
 
     # The callback for when the client receives a CONNACK response from the server.
     def _on_connect(self, client, userdata, flags, rc):
-        print("Connected with result code "+str(rc))
+        print(f"Connected {client} with result code {rc}")
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
+        if self._subTopic:
+            self._client.subscribe(self._subTopic + "/#")
 #        client.subscribe("$SYS/#")
 
     # The callback for when a PUBLISH message is received from the server.

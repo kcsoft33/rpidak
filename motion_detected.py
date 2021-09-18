@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import mq
 import sys
 import os
@@ -15,11 +16,11 @@ data = None
 
 if (len(sys.argv) > 1):
     imageFileName = sys.argv[1]
-    with open(imageFileName, "rb") as imageFile: 
-        imageData = imageFile.read() 
-        data = bytearray(imageData) 
+    # with open(imageFileName, "rb") as imageFile: 
+    #     imageData = imageFile.read() 
+    #     data = bytearray(imageData) 
 
-mqPub = mq.Client()
-mqPub.publishState(data,"MOTION")
+    mqPub = mq.Client('mqtt_capture.yaml')
+    mqPub.publishState(imageFileName,"MOTION")
 
-os.remove(imageFileName)
+        # os.remove(imageFileName)

@@ -1,0 +1,11 @@
+mqtt:
+  server: mqtt.domain.me
+  port: 1883
+  client: rpidak_capture
+  user: iot
+  pwd: ha_iot
+  topic: cameras/capture/ch_1
+  command_prefix: cmnd
+  state_prefix: stat
+  telemetry_prefix: tele
+  fulltopic: "%prefix%/%topic%"
