@@ -1,0 +1,11 @@
+mqtt:
+  server: mqtt.domain.me
+  port: 1883
+  client: rpidak_motion
+  user: iot
+  pwd: ha_iot
+  topic: cameras/motion/ch_1
+  command_prefix: cmnd
+  state_prefix: stat
+  telemetry_prefix: tele
+  fulltopic: "%prefix%/%topic%"
